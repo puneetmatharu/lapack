@@ -1,6 +1,9 @@
 include(GNUInstallDirs)
 
-message(STATUS "${PROJECT_NAME} ${PROJECT_VERSION}  CMake ${CMAKE_VERSION}  Toolchain ${CMAKE_TOOLCHAIN_FILE}")
+message(
+  STATUS
+    "${PROJECT_NAME} ${PROJECT_VERSION}  CMake ${CMAKE_VERSION}  Toolchain ${CMAKE_TOOLCHAIN_FILE}"
+)
 
 if(local)
   get_filename_component(local ${local} ABSOLUTE)
@@ -9,7 +12,6 @@ if(local)
     message(FATAL_ERROR "Local directory ${local} does not exist")
   endif()
 endif()
-
 
 option(build_cblas "Build CBLAS" false)
 option(build_lapacke "Build LAPACKE" false)
@@ -44,7 +46,8 @@ set(CMAKE_TLS_VERIFY true)
 
 set(FETCHCONTENT_UPDATES_DISCONNECTED true)
 
-# Rpath options necessary for shared library install to work correctly in user projects
+# Rpath options necessary for shared library install to work correctly in user
+# projects
 set(CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
@@ -54,7 +57,12 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true)
 
 # allow CMAKE_PREFIX_PATH with ~ expand
 if(CMAKE_PREFIX_PATH)
-  get_filename_component(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ABSOLUTE)
+  set(NEW_CMAKE_PREFIX_PATH)
+  foreach(OLD_PATH IN LISTS CMAKE_PREFIX_PATH)
+    cmake_path(ABSOLUTE_PATH OLD_PATH OUTPUT_VARIABLE FULL_PATH)
+    list(APPEND NEW_CMAKE_PREFIX_PATH ${FULL_PATH})
+  endforeach()
+  set(CMAKE_PREFIX_PATH ${NEW_CMAKE_PREFIX_PATH})
 endif()
 
 # --- auto-ignore build directory

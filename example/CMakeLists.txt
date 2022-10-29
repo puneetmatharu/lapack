@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.25)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
 project(LapackExamples LANGUAGES Fortran)
 
@@ -15,7 +15,8 @@ find_package(LAPACK CONFIG REQUIRED)
 
 set(CMAKE_REQUIRED_LIBRARIES LAPACK::LAPACK)
 
-check_fortran_source_compiles("
+CHECK_Fortran_SOURCE_COMPILES(
+  "
 program a
 use, intrinsic :: iso_fortran_env, only : real64
 implicit none
@@ -25,11 +26,12 @@ real(real64), external :: dnrm2
 print *, dnrm2(1, [0._real64], 1)
 end program
 "
-lapack_d
-SRC_EXT f90
-)
+  lapack_d
+  SRC_EXT
+  f90)
 
-check_fortran_source_compiles("
+CHECK_Fortran_SOURCE_COMPILES(
+  "
 program a
 use, intrinsic :: iso_fortran_env, only : real32
 implicit none
@@ -39,9 +41,9 @@ real(real32), external :: snrm2
 print *, snrm2(1, [0._real32], 1)
 end program
 "
-lapack_s
-SRC_EXT f90
-)
+  lapack_s
+  SRC_EXT
+  f90)
 
 if(lapack_d)
   add_executable(test_dgesvd test_dgesvd.f90)

@@ -1,6 +1,7 @@
 name: ci
 
 env:
+  CTEST_OUTPUT_ON_FAILURE: 1
   CMAKE_BUILD_TYPE: Release
   HOMEBREW_NO_INSTALL_CLEANUP: 1
 
@@ -11,53 +12,47 @@ on:
       - "**/CMakeLists.txt"
       - ".github/workflows/ci.yml"
 
-
 jobs:
-
   fortran:
     strategy:
       matrix:
         shared: [true, false]
-        img: [ {os: ubuntu-latest, cmake_gen: Unix Makefiles},
-               {os: macos-latest, cmake_gen: Unix Makefiles},
-               {os: windows-latest, cmake_gen: MinGW Makefiles}
-        ]
+        img:
+          [
+            { os: ubuntu-latest, cmake_gen: Unix Makefiles },
+            { os: macos-latest, cmake_gen: Unix Makefiles },
+            { os: windows-latest, cmake_gen: MinGW Makefiles },
+          ]
 
     runs-on: ${{ matrix.img.os }}
-    timeout-minutes: 7
+    timeout-minutes: 10
     env:
       CMAKE_GENERATOR: ${{ matrix.img.cmake_gen }}
 
     steps:
+      - name: install Gfortran
+        if: runner.os == 'macOS'
+        run: brew reinstall gcc
 
-    - name: Setup cmake
-      uses: jwlawson/actions-setup-cmake@v1
-      with:
-        cmake-version: '3.19'
+      - uses: actions/checkout@v3
 
-    - name: install Gfortran
-      if: runner.os == 'macOS'
-      run: brew reinstall gcc
+      - name: config shared=${{ matrix.shared }}
+        run: cmake -B build -Darith=d -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DCMAKE_INSTALL_PREFIX:PATH=${{ runner.temp }}
 
-    - uses: actions/checkout@v3
+      - name: build
+        run: cmake --build build --parallel
 
-    - name: config shared=${{ matrix.shared }}
-      run: cmake -B build -Darith=d -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DCMAKE_INSTALL_PREFIX:PATH=${{ runner.temp }}
+      - name: test
+        run: ctest --test-dir build --preset default -V
 
-    - name: build
-      run: cmake --build build --parallel
+      - name: install
+        run: cmake --install build
 
-    - name: test
-      run: ctest --test-dir build --preset default -V
+      - name: example config
+        run: cmake -S example -B example/build -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
 
-    - name: install
-      run: cmake --install build
+      - name: example build
+        run: cmake --build example/build
 
-    - name: example config
-      run: cmake -S example -B example/build -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
-
-    - name: example build
-      run: cmake --build example/build
-
-    - name: example test
-      run: ctest --test-dir example/build
+      - name: example test
+        run: ctest --test-dir example/build

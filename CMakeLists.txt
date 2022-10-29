@@ -1,19 +1,23 @@
-cmake_minimum_required(VERSION 3.13...3.25)
+cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 
 get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-if(NOT is_multi_config AND NOT (CMAKE_BUILD_TYPE OR DEFINED ENV{CMAKE_BUILD_TYPE}))
+if(NOT is_multi_config AND NOT (CMAKE_BUILD_TYPE OR DEFINED
+                                                    ENV{CMAKE_BUILD_TYPE}))
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Release default")
 endif()
 
-file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION PROJECT_VERSION
-REGEX "^([0-9]+\.[0-9]+\.[0-9]+)" LIMIT_INPUT 16 LENGTH_MAXIMUM 16 LIMIT_COUNT 1
-)
+file(
+  STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION PROJECT_VERSION
+  REGEX "^([0-9]+\.[0-9]+\.[0-9]+)"
+  LIMIT_INPUT 16
+  LENGTH_MAXIMUM 16
+  LIMIT_COUNT 1)
 
-project(LAPACK
-LANGUAGES C Fortran
-VERSION ${PROJECT_VERSION}
-HOMEPAGE_URL "http://netlib.org/lapack"
-)
+project(
+  LAPACK
+  LANGUAGES C Fortran
+  VERSION ${PROJECT_VERSION}
+  HOMEPAGE_URL "http://netlib.org/lapack")
 
 enable_testing()
 if(DEFINED BUILD_TESTING)
@@ -34,15 +38,15 @@ set_property(TARGET blas PROPERTY LINKER_LANGUAGE Fortran)
 set_property(TARGET blas PROPERTY VERSION ${LAPACK_VERSION})
 set_property(TARGET blas PROPERTY EXPORT_NAME BLAS)
 
-
 configure_file(BLAS/src/CMakeLists.txt ${lapack_SOURCE_DIR}/BLAS/SRC/ COPYONLY)
 add_subdirectory(${lapack_SOURCE_DIR}/BLAS/SRC ${lapack_BINARY_DIR}/BLAS/SRC)
 
-install(TARGETS blas EXPORT ${PROJECT_NAME}-targets
-LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+install(
+  TARGETS blas
+  EXPORT ${PROJECT_NAME}-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME})
 
 # --- CBLAS
 if(build_cblas)
@@ -51,19 +55,24 @@ if(build_cblas)
   set_property(TARGET cblas PROPERTY LINKER_LANGUAGE C)
   set_property(TARGET cblas PROPERTY VERSION ${LAPACK_VERSION})
   set_property(TARGET cblas PROPERTY EXPORT_NAME CBLAS)
-  target_include_directories(cblas PUBLIC
-  "$<BUILD_INTERFACE:${lapack_SOURCE_DIR}/CBLAS/include;${lapack_BINARY_DIR}/include>"
-  $<INSTALL_INTERFACE:include>
-  )
-  configure_file(CBLAS/src/CMakeLists.txt ${lapack_SOURCE_DIR}/CBLAS/src/ COPYONLY)
-  add_subdirectory(${lapack_SOURCE_DIR}/CBLAS/src ${lapack_BINARY_DIR}/CBLAS/src)
+  target_include_directories(
+    cblas
+    PUBLIC
+      "$<BUILD_INTERFACE:${lapack_SOURCE_DIR}/CBLAS/include;${lapack_BINARY_DIR}/include>"
+      $<INSTALL_INTERFACE:include>)
+  configure_file(CBLAS/src/CMakeLists.txt ${lapack_SOURCE_DIR}/CBLAS/src/
+                 COPYONLY)
+  add_subdirectory(${lapack_SOURCE_DIR}/CBLAS/src
+                   ${lapack_BINARY_DIR}/CBLAS/src)
 
-  install(TARGETS cblas EXPORT ${PROJECT_NAME}-targets
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  )
+  install(
+    TARGETS cblas
+    EXPORT ${PROJECT_NAME}-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}
+    INCLUDES
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 endif()
 
 # --- LAPACK
@@ -76,12 +85,12 @@ set_property(TARGET lapack PROPERTY EXPORT_NAME LAPACK)
 configure_file(src/CMakeLists.txt ${lapack_SOURCE_DIR}/SRC/ COPYONLY)
 add_subdirectory(${lapack_SOURCE_DIR}/SRC ${lapack_BINARY_DIR}/SRC)
 
-install(TARGETS lapack EXPORT ${PROJECT_NAME}-targets
-LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
+install(
+  TARGETS lapack
+  EXPORT ${PROJECT_NAME}-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME})
 
 # --- LAPACKE
 if(build_lapacke)
@@ -90,23 +99,30 @@ if(build_lapacke)
   set_property(TARGET lapacke PROPERTY LINKER_LANGUAGE C)
   set_property(TARGET lapacke PROPERTY VERSION ${LAPACK_VERSION})
   set_property(TARGET lapacke PROPERTY EXPORT_NAME LAPACKE)
-  target_include_directories(lapacke PUBLIC
-  "$<BUILD_INTERFACE:${lapack_SOURCE_DIR}/LAPACKE/include;${lapack_BINARY_DIR}/include>"
-  $<INSTALL_INTERFACE:include>
-  )
+  target_include_directories(
+    lapacke
+    PUBLIC
+      "$<BUILD_INTERFACE:${lapack_SOURCE_DIR}/LAPACKE/include;${lapack_BINARY_DIR}/include>"
+      $<INSTALL_INTERFACE:include>)
 
-  configure_file(LAPACKE/src/CMakeLists.txt ${lapack_SOURCE_DIR}/LAPACKE/src/ COPYONLY)
-  add_subdirectory(${lapack_SOURCE_DIR}/LAPACKE/src ${lapack_BINARY_DIR}/LAPACKE/src)
+  configure_file(LAPACKE/src/CMakeLists.txt ${lapack_SOURCE_DIR}/LAPACKE/src/
+                 COPYONLY)
+  add_subdirectory(${lapack_SOURCE_DIR}/LAPACKE/src
+                   ${lapack_BINARY_DIR}/LAPACKE/src)
 
-  configure_file(LAPACKE/utils/CMakeLists.txt ${lapack_SOURCE_DIR}/LAPACKE/utils/ COPYONLY)
-  add_subdirectory(${lapack_SOURCE_DIR}/LAPACKE/utils ${lapack_BINARY_DIR}/LAPACKE/utils)
+  configure_file(LAPACKE/utils/CMakeLists.txt
+                 ${lapack_SOURCE_DIR}/LAPACKE/utils/ COPYONLY)
+  add_subdirectory(${lapack_SOURCE_DIR}/LAPACKE/utils
+                   ${lapack_BINARY_DIR}/LAPACKE/utils)
 
-  install(TARGETS lapacke EXPORT ${PROJECT_NAME}-targets
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  )
+  install(
+    TARGETS lapacke
+    EXPORT ${PROJECT_NAME}-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}
+    INCLUDES
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 endif()
 
 # --- test
@@ -116,10 +132,8 @@ endif()
 
 # --- install
 
-install(FILES
-${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindLAPACK.cmake
-DESTINATION cmake
-)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindLAPACK.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/")
 
 include(cmake/install.cmake)
 
